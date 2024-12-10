@@ -142,9 +142,19 @@ const updatePassword = asyncHandler (async (req, res) => {
 
 // @route GET /auth/refresh_token
 // @access Public
-const refreshToken = asyncHandler (async (req, res) => {       
+const refreshToken = asyncHandler (async (req, res) => { 
+    
+    //test unique
+    try{
+        const targetUser = await User.findById(req.user.id)
+        const token = await generateToken(targetUser._id, targetUser.email)
+        res.status(200).json({data: token })
 
-    res.status(200).json({data: 'refreshToken' })
+    }catch(err){
+        res.status(400).json({data: 'Not able to refreh token!'})
+        throw new Error('Not able to refreh token!') 
+    }
+    
 })
 
 // @route GET /auth/init_keys
