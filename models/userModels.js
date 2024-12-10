@@ -2,13 +2,17 @@ const mongoose = require('mongoose')
 const { mainDB } = require('../config/db')
 
 const userSchema = mongoose.Schema({
-    username: {
+    email: {
         type: String,
         required: true,  
         unique: true,   
     },
     password: {
         type: String,
+        required: true,  
+    },
+    active: {
+        type: Boolean,
         required: true,  
     },
     token: {
