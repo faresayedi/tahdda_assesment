@@ -86,6 +86,7 @@ const signUp = asyncHandler (async (req, res) => {
         res.status(200).json({data: 'Thank you for joining us! Please verify your email to activate your account' })
 
     }catch(err){
+        console.log(err)
         res.status(400).json({data: 'Not able to signUp, please try again later!' })
         throw new Error('Not able to signUp, please try again later!') 
     }
@@ -115,7 +116,7 @@ const activateAccount = asyncHandler (async (req, res) => {
 
     try{
 
-        const updateUser = { $set: {active: true} };        
+        const updateUser = { $set: {active: true, token: null} };        
         await User.updateOne(targetUser, updateUser);
         res.status(200).json({data: 'User activated with success' })
 
@@ -128,9 +129,40 @@ const activateAccount = asyncHandler (async (req, res) => {
 
 // @route POST /auth/forget_password
 // @access Public
-const forgetPassword = asyncHandler (async (req, res) => {       
+const forgetPassword = asyncHandler (async (req, res) => {   
+    
+    //validate data
+    const validationSchema = Joi.object({
+        email: Joi.string().email().required()
+    })
+    await validationSchema.validateAsync(req.body);
+    const {email} = req.body;
 
-    res.status(200).json({data: 'forgetPassword' })
+    //test unique
+    const targetUser = await User.findOne({email})
+    if(!targetUser){
+        res.status(400).json({data: "User don't exist!" })
+        throw new Error("User don't exist!") 
+    }
+    
+    //hash password
+    const token = uuid.v4();
+
+    try{
+
+        const updateUser = { $set: {token} };        
+        await User.updateOne(targetUser, updateUser);
+
+        const uri = 'http://link_to_front?token=' + token;
+        console.log(uri)
+        dataService.sendMail(email, 'Forget Password', `Use this link to update your password!  ${uri}`)
+
+        res.status(200).json({data: 'Please verify your email to get a link for updating your password' })
+
+    }catch(err){
+        res.status(400).json({data: 'We got an error, please try again later!' })
+        throw new Error('We got an error, please try again later!') 
+    }
 })
 
 // @route POST /auth/update_password
