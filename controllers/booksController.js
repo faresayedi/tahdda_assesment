@@ -38,6 +38,7 @@ const addBook = asyncHandler (async (req, res) => {
 
     try{
         const newBook = await Book.create({
+            user: req.user.id,
             title, 
             author,
             publishedDate, 
@@ -47,6 +48,7 @@ const addBook = asyncHandler (async (req, res) => {
         res.status(200).json({data: newBook })
 
     }catch(err){
+        console.log(err)
         res.status(400).json({data: 'Not able to add book, please try again later!' })
         throw new Error('Not able to add book, please try again later!') 
     }
@@ -73,6 +75,7 @@ const getAllBooks = asyncHandler (async (req, res) => {
     try{
         const count = await Book.countDocuments();
         const books = await Book.find()
+                                .select('title author publishedDate numberOfPages createdAt updatedAt')
                                 .limit(perPage)
                                 .skip(perPage * (page - 1))
                                 .sort({createdAt: -1})
@@ -200,9 +203,14 @@ const deleteBook = asyncHandler (async (req, res) => {
     await validationSchema.validateAsync(req.params);
     const {id} = req.params;
 
-    const book = await findBook(id, res)
-
     try{
+        const book = await Book.findById(id)
+
+        if(req.user.id.toString() !== book.user.toString()){
+            res.status(400).json({data: `Not Authorized to delete the book : ${book.title}`})
+            throw new Error(`Not Authorized to delete the book : ${book.title}`) 
+        }
+
         await Book.deleteOne(book)
         res.status(200).json({data: `Book : ${book.title}, deleted with success` })
     }catch(err){
@@ -215,7 +223,7 @@ const deleteBook = asyncHandler (async (req, res) => {
 
 async function findBook(id, res){
     try{
-        return await Book.findById(id);
+        return await Book.findById(id).select('title author publishedDate numberOfPages createdAt updatedAt');
     }catch(err){
         res.status(400).json({data: 'Book not found!' })
         throw new Error('Book not found!') 
