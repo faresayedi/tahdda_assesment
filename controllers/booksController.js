@@ -135,7 +135,18 @@ const editBook = asyncHandler (async (req, res) => {
     await validationBodySchema.validateAsync(req.body);
     const {title, author, publishedDate, numberOfPages} = req.body;
 
-    let book = await findBook(id, res)
+    let book = await Book.find({_id: id})
+    if(!book){
+        res.status(400).json({data: 'Book dont exist!' })
+        throw new Error('Book dont exist!') 
+    }
+
+    //verif ownership
+    if(req.user.id.toString() !== book.user.toString()){
+        res.status(400).json({data: `Not Authorized to edit the book : ${book.title}`})
+        throw new Error(`Not Authorized to edit the book : ${book.title}`) 
+    }
+
     let update = {};
 
     if(title && book.title !== title){
@@ -182,6 +193,8 @@ const editBook = asyncHandler (async (req, res) => {
             const updateBook = { $set: update };        
             await Book.updateOne(book, updateBook);   
             book = await findBook(id, res)
+        }else{
+            delete book.user;
         }
          
         res.status(200).json({data: book })

@@ -167,9 +167,37 @@ const forgetPassword = asyncHandler (async (req, res) => {
 
 // @route POST /auth/update_password
 // @access Public
-const updatePassword = asyncHandler (async (req, res) => {       
+const updatePassword = asyncHandler (async (req, res) => {  
+    
+    //validate data
+    const validationSchema = Joi.object({
+        token: Joi.string().required(),
+        password: Joi.string().required()
+    })
+    await validationSchema.validateAsync(req.body);
+    const {token, password} = req.body;
 
-    res.status(200).json({data: 'updatePassword' })
+    //test unique
+    const targetUser = await User.findOne({token})
+    if(!targetUser){
+        res.status(400).json({data: "User don't exist!" })
+        throw new Error("User don't exist!") 
+    }
+
+    //hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    try{
+
+        const updateUser = { $set: {password: hashedPassword, token: null} };        
+        await User.updateOne(targetUser, updateUser);
+        res.status(200).json({data: 'Password updated with success!' })
+
+    }catch(err){
+        res.status(400).json({data: 'We got an error, please try again later!' })
+        throw new Error('We got an error, please try again later!') 
+    }
 })
 
 // @route GET /auth/refresh_token
