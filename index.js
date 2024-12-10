@@ -7,6 +7,8 @@ const mongoSanitize = require('express-mongo-sanitize')
 const {errorHandler} = require('./middlewares/errorsMiddleware')
 const { expressCspHeader, SELF, NONE } = require('express-csp-header');
 const hsts = require('hsts')
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./config/swagger'); // Path to your Swagger configuration
 
 //init pp
 const app = express();
@@ -36,6 +38,7 @@ app.set('trust proxy', true);
 
 app.use('/auth', require('./routes/authRoute'));
 app.use('/api', require('./routes/apiRoute'));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use('*', (req, res) => {
   return res.status(404).json({
