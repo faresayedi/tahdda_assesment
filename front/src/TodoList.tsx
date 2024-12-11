@@ -4,12 +4,14 @@ import { Todo } from './types';
 
 const TodoList: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
+  const userId = 1;
 
   useEffect(() => {
     const fetchTodos = async () => {
-      try {
+      try {        
         const response = await axios.get('https://jsonplaceholder.typicode.com/todos');
-        setTodos(response.data);
+        const filteredTodos = response.data.filter((todo: Todo) => todo.userId === userId);
+        setTodos(filteredTodos);
       } catch (error) {
         console.error('error: ', error);
       }
