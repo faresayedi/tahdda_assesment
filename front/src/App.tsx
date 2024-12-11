@@ -1,14 +1,13 @@
-import TodoList from './TodoList'
+import React from 'react';
+import TodoList from './TodoList';
 import './App.css'
 
-function App() {
-
+const App: React.FC = () => {
   return (
-    <>
-      <TodoList>       
-      </TodoList>     
-    </>
-  )
-}
+    <div>
+      <TodoList />
+    </div>
+  );
+};
 
-export default App
+export default App;
